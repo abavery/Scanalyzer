@@ -492,38 +492,39 @@ namespace Scanalyzer.Rendering
             if (_model == null || _selectedFaces.Count == 0)
                 return null;
                 
-            // Collect all vertices from selected faces
-            List<Vector3> vertices = new List<Vector3>();
+            // Collect face centers from selected faces
+            List<Vector3> faceCenters = new List<Vector3>();
             
             foreach (int faceIndex in _selectedFaces)
             {
                 if (faceIndex >= 0 && faceIndex < _model.Triangles.Count)
                 {
                     var triangle = _model.Triangles[faceIndex];
-                    vertices.Add(triangle.Vertex1);
-                    vertices.Add(triangle.Vertex2);
-                    vertices.Add(triangle.Vertex3);
+                    
+                    // Calculate the face center
+                    Vector3 faceCenter = (triangle.Vertex1 + triangle.Vertex2 + triangle.Vertex3) / 3.0f;
+                    faceCenters.Add(faceCenter);
                 }
             }
             
             // Need at least 3 points to define a plane
-            if (vertices.Count < 3)
+            if (faceCenters.Count < 3)
                 return null;
                 
-            // Calculate centroid
+            // Calculate the centroid of face centers
             Vector3 centroid = Vector3.Zero;
-            foreach (var vertex in vertices)
+            foreach (var center in faceCenters)
             {
-                centroid += vertex;
+                centroid += center;
             }
-            centroid /= vertices.Count;
+            centroid /= faceCenters.Count;
             
-            // Build the covariance matrix
+            // Build the covariance matrix using face centers
             float xx = 0, xy = 0, xz = 0, yy = 0, yz = 0, zz = 0;
             
-            foreach (var vertex in vertices)
+            foreach (var center in faceCenters)
             {
-                Vector3 diff = vertex - centroid;
+                Vector3 diff = center - centroid;
                 xx += diff.X * diff.X;
                 xy += diff.X * diff.Y;
                 xz += diff.X * diff.Z;
@@ -539,12 +540,26 @@ namespace Scanalyzer.Rendering
                 { xz, yz, zz }
             };
             
-            // Find the eigenvector with the smallest eigenvalue
-            // This is a simplified approach - we'll use the power method to find the smallest eigenvector
+            // Find the eigenvector with the smallest eigenvalue (this will be our normal)
             Vector3 normal = FindSmallestEigenvector(covMatrix);
             
-            // Return the centroid as a point on the plane and the normal vector
-            return (centroid, normal);
+            // Ensure the normal is normalized
+            normal = Vector3.Normalize(normal);
+            
+            // Calculate the optimal d value that minimizes the sum of squared distances
+            // from all face centers to the plane
+            float d = 0;
+            foreach (var center in faceCenters)
+            {
+                d += Vector3.Dot(normal, center);
+            }
+            d /= faceCenters.Count;
+            
+            // Calculate a point on the plane using the optimal d value
+            Vector3 planePoint = normal * d;
+            
+            // Return the point and normal
+            return (planePoint, normal);
         }
         
         // Find the eigenvector corresponding to the smallest eigenvalue using the power method
