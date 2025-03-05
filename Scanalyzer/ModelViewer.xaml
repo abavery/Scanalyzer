@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:Scanalyzer"
+             xmlns:rendering="clr-namespace:Scanalyzer.Rendering"
+             x:Class="Scanalyzer.ModelViewer">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        
+        <rendering:StlViewer x:Name="StlViewer" Grid.Row="0" />
+        
+        <VerticalStackLayout Grid.Row="1" Padding="10" Spacing="5" BackgroundColor="Black">
+            <Label Text="Plane Fitting Tools" FontAttributes="Bold" />
+            
+            <HorizontalStackLayout Spacing="10">
+                <Button Text="Toggle Plane" Clicked="OnTogglePlaneClicked" />
+                <Button Text="Clear Selection" Clicked="OnClearSelectionClicked" />
+            </HorizontalStackLayout>
+            
+            <Label x:Name="PlaneInfoLabel" Text="Select faces to fit a plane" />
+            
+            <HorizontalStackLayout Spacing="10">
+                <Label Text="Plane Size:" VerticalOptions="Center" />
+                <Slider x:Name="PlaneSizeSlider" Minimum="0.1" Maximum="3.0" Value="1.0" 
+                        WidthRequest="200" ValueChanged="OnPlaneSizeChanged" />
+            </HorizontalStackLayout>
+        </VerticalStackLayout>
+    </Grid>
+</ContentView>
