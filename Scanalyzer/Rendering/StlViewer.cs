@@ -31,6 +31,9 @@ namespace Scanalyzer.Rendering
         private SKColor _planeColor = SKColors.Green.WithAlpha(128); // Semi-transparent green
         private float _planeSize = 1.0f; // Size multiplier for the plane visualization
         
+        public IReadOnlySet<int> SelectedFaces => _selectedFaces;
+        public float PlaneSize => _planeSize;
+        
         public static readonly BindableProperty ModelPathProperty = BindableProperty.Create(
             nameof(ModelPath),
             typeof(string),
@@ -463,9 +466,6 @@ namespace Scanalyzer.Rendering
         
         // Store the last paint surface for use in selection
         private new SKPaintSurfaceEventArgs? PaintSurface { get; set; }
-        
-        // Get the currently selected face indices
-        public IReadOnlyCollection<int> SelectedFaces => _selectedFaces;
         
         // Clear all selections
         public void ClearSelection()

@@ -1,5 +1,9 @@
 using Microsoft.Maui.Controls;
 using System.IO;
+using System.Numerics;
+using System.Text.RegularExpressions;
+using Scanalyzer.Models;
+using Scanalyzer.Rendering;
 
 namespace Scanalyzer
 {
@@ -12,11 +16,26 @@ namespace Scanalyzer
             null,
             propertyChanged: OnModelPathChanged);
             
+        public static readonly BindableProperty SceneViewModelProperty = BindableProperty.Create(
+            nameof(SceneViewModel),
+            typeof(SceneViewModel),
+            typeof(ModelViewer),
+            null);
+            
         public string? ModelPath
         {
             get => (string?)GetValue(ModelPathProperty);
             set => SetValue(ModelPathProperty, value);
         }
+        
+        public SceneViewModel? SceneViewModel
+        {
+            get => (SceneViewModel?)GetValue(SceneViewModelProperty);
+            set => SetValue(SceneViewModelProperty, value);
+        }
+        
+        private SceneObject? _currentMeshObject;
+        private static readonly Regex VectorPattern = new Regex(@"\(([-\d.]+),\s*([-\d.]+),\s*([-\d.]+)\)");
         
         private static void OnModelPathChanged(BindableObject bindable, object oldValue, object newValue)
         {
@@ -70,8 +89,66 @@ namespace Scanalyzer
             });
         }
         
+        public void SetCurrentMeshObject(SceneObject meshObject)
+        {
+            _currentMeshObject = meshObject;
+            if (meshObject.FilePath != null)
+            {
+                ModelPath = meshObject.FilePath;
+            }
+        }
+        
+        private Vector3? ParseVector(string text)
+        {
+            var match = VectorPattern.Match(text);
+            if (match.Success && match.Groups.Count == 4)
+            {
+                return new Vector3(
+                    float.Parse(match.Groups[1].Value),
+                    float.Parse(match.Groups[2].Value),
+                    float.Parse(match.Groups[3].Value));
+            }
+            return null;
+        }
+        
         private void OnTogglePlaneClicked(object sender, EventArgs e)
         {
+            if (_currentMeshObject != null && SceneViewModel != null)
+            {
+                // Get the plane equation
+                var planeEquation = StlViewer.GetPlaneEquation();
+                if (planeEquation.HasValue)
+                {
+                    var (a, b, c, d) = planeEquation.Value;
+                    
+                    // Create normal vector from plane equation coefficients
+                    var normal = new Vector3(a, b, c);
+                    
+                    // Calculate a point on the plane
+                    // We can get a point by solving the plane equation for any coordinate
+                    // Let's choose x = y = 0, then z = -d/c (if c != 0)
+                    Vector3 point;
+                    if (Math.Abs(c) > 0.001f)
+                    {
+                        point = new Vector3(0, 0, -d/c);
+                    }
+                    else if (Math.Abs(b) > 0.001f)
+                    {
+                        point = new Vector3(0, -d/b, 0);
+                    }
+                    else
+                    {
+                        point = new Vector3(-d/a, 0, 0);
+                    }
+                    
+                    // Get the current plane size from the StlViewer
+                    float planeSize = StlViewer.PlaneSize;
+                    
+                    // Add the plane to the scene tree
+                    SceneViewModel.AddPlaneObject(_currentMeshObject, normal, point, planeSize);
+                }
+            }
+            
             StlViewer.TogglePlaneVisualization();
             UpdatePlaneInfoLabel();
         }

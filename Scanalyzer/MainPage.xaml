@@ -23,41 +23,12 @@
 
         <!-- Main Content Area with Object Tree and View -->
         <Grid Grid.Row="1" ColumnDefinitions="Auto,*">
-            <!-- Object Hierarchy Tree (Left Panel) -->
-            <Grid Grid.Column="0" WidthRequest="250" BackgroundColor="#f8f8f8" x:Name="LeftPanel">
-                <Grid.Resources>
-                    <Style TargetType="Label">
-                        <Setter Property="TextColor" Value="#333333" />
-                    </Style>
-                </Grid.Resources>
-                <Grid RowDefinitions="Auto,*">
-                    <Grid Grid.Row="0" Padding="5" BackgroundColor="#e0e0e0">
-                        <Grid ColumnDefinitions="*,Auto">
-                            <Label Grid.Column="0" Text="Object Hierarchy" FontAttributes="Bold" VerticalOptions="Center" />
-                            <Button Grid.Column="1" Text="☰" WidthRequest="30" HeightRequest="30"
-                                    x:Name="CollapseButton" Clicked="OnCollapseButtonClicked" />
-                        </Grid>
-                    </Grid>
-                    <ScrollView Grid.Row="1" x:Name="TreeScrollView">
-                        <VerticalStackLayout Padding="10" Spacing="10">
-                            <Label Text="Root Object" />
-                            <VerticalStackLayout Margin="20,0,0,0">
-                                <Label Text="Child Object 1" />
-                                <Label Text="Child Object 2" />
-                                <VerticalStackLayout Margin="20,0,0,0">
-                                    <Label Text="Nested Object 1" />
-                                    <Label Text="Nested Object 2" />
-                                </VerticalStackLayout>
-                                <Label Text="Child Object 3" />
-                            </VerticalStackLayout>
-                        </VerticalStackLayout>
-                    </ScrollView>
-                </Grid>
-            </Grid>
+            <!-- Object Tree (Left Panel) -->
+            <local:ObjectTree Grid.Column="0" x:Name="ObjectTree" SceneViewModel="{Binding SceneViewModel}" />
 
             <!-- Main View Area (Right Panel) -->
             <Grid Grid.Column="1" x:Name="MainViewArea">
-                <local:ModelViewer x:Name="ModelViewer" />
+                <local:ModelViewer x:Name="ModelViewer" SceneViewModel="{Binding SceneViewModel}" />
             </Grid>
         </Grid>
     </Grid>

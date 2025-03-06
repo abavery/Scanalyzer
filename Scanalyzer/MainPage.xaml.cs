@@ -2,24 +2,23 @@
 using System.Collections.Generic;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Storage;
+using Scanalyzer.Models;
+using System.IO;
 
 namespace Scanalyzer;
 
 public partial class MainPage : ContentPage
 {
-    private bool _isTreeCollapsed = false;
-    private const double _expandedTreeWidth = 250;
-    private const double _collapsedTreeWidth = 40;
+    private SceneViewModel _sceneViewModel;
     
-    // Reference to the ModelViewer
-    private ModelViewer? _modelViewer;
+    public SceneViewModel SceneViewModel => _sceneViewModel;
 
     public MainPage()
     {
-        InitializeComponent();
+        _sceneViewModel = new SceneViewModel();
+        BindingContext = this;
         
-        // Get reference to the ModelViewer
-        _modelViewer = MainViewArea.FindByName<ModelViewer>("ModelViewer");
+        InitializeComponent();
         
         // Wire up button events
         var openButton = this.FindByName<Button>("OpenButton");
@@ -27,31 +26,29 @@ public partial class MainPage : ContentPage
         {
             openButton.Clicked += OnOpenButtonClicked;
         }
+        
+        // Subscribe to selection changes
+        _sceneViewModel.PropertyChanged += (s, e) =>
+        {
+            if (e.PropertyName == nameof(SceneViewModel.SelectedObject))
+            {
+                OnSelectedObjectChanged();
+            }
+        };
     }
-
-    private void OnCollapseButtonClicked(object sender, EventArgs e)
+    
+    private void OnSelectedObjectChanged()
     {
-        _isTreeCollapsed = !_isTreeCollapsed;
-
-        if (_isTreeCollapsed)
+        var selectedObject = _sceneViewModel.SelectedObject;
+        if (selectedObject?.ObjectType == SceneObjectType.Mesh)
         {
-            // Collapse the tree view
-            TreeScrollView.IsVisible = false;
-            CollapseButton.Text = "≫";
-            LeftPanel.WidthRequest = _collapsedTreeWidth;
-        }
-        else
-        {
-            // Expand the tree view
-            TreeScrollView.IsVisible = true;
-            CollapseButton.Text = "☰";
-            LeftPanel.WidthRequest = _expandedTreeWidth;
+            ModelViewer.SetCurrentMeshObject(selectedObject);
         }
     }
     
     private async void OnOpenButtonClicked(object? sender, EventArgs e)
     {
-        if (_modelViewer == null)
+        if (ModelViewer == null)
         {
             await DisplayAlert("Error", "3D view not initialized", "OK");
             return;
@@ -78,8 +75,15 @@ public partial class MainPage : ContentPage
             
             if (result != null)
             {
-                // For now, just display the file path since we don't have a model loader yet
-                await DisplayAlert("File Selected", $"Selected file: {result.FullPath}", "OK");
+                // Load the model
+                var model = StlModel.LoadFromFile(result.FullPath);
+                
+                // Add it to the scene
+                string fileName = Path.GetFileNameWithoutExtension(result.FullPath);
+                var meshObject = _sceneViewModel.AddMeshObject(fileName, result.FullPath, model);
+                
+                // Select the new object
+                _sceneViewModel.SelectedObject = meshObject;
             }
         }
         catch (Exception ex)

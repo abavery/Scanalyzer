@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:models="clr-namespace:Scanalyzer.Models"
+             x:Class="Scanalyzer.ObjectTree">
+
+    <Grid RowDefinitions="Auto,*">
+        <!-- Header -->
+        <Grid Grid.Row="0" Padding="5" BackgroundColor="#e0e0e0">
+            <Grid ColumnDefinitions="*,Auto">
+                <Label Grid.Column="0" Text="Object Hierarchy" FontAttributes="Bold" VerticalOptions="Center" />
+                <Button Grid.Column="1" Text="☰" WidthRequest="30" HeightRequest="30"
+                        x:Name="CollapseButton" Clicked="OnCollapseButtonClicked" />
+            </Grid>
+        </Grid>
+
+        <!-- Tree View -->
+        <ScrollView Grid.Row="1" x:Name="TreeScrollView">
+            <VerticalStackLayout x:Name="TreeContainer" Padding="10" Spacing="5">
+                <!-- Tree items will be generated here -->
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+
+</ContentView> 
